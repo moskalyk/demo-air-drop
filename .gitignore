@@ -1,0 +1,4 @@
+/relayer/.env
+/relayer/backend/.env
+/relayer/node_modules
+/client/node_modules
