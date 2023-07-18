@@ -60,22 +60,23 @@ const executeTx = async (ethAuthProofString: string, address: string) => {
         // Create your Sequence server wallet, controlled by your server EOA, and connect it to the relayer
         const wallet = (await Wallet.singleOwner(walletEOA)).connect(provider, relayer)
 
-        const erc20TokenAddress = '0xb70d525c171072d21f7f89f65836f22daba1cd57'
+        const erc20TokenAddress = '0xdd0d8fee45c2d1ad1d39efcb494c8a1db4fde5b7'
 
         // Craft your transaction
         const erc20Interface = new ethers.utils.Interface([
-            'function earn(address recipient_) external'
+            'function collect(address recipient_) external'
         ])
     
 
         const data = erc20Interface.encodeFunctionData(
-            'earn', [address]
+            'collect', [address]
         )
     
         const txn = {
             to: erc20TokenAddress,
             data
         }
+
         // Request the possible fee options the relayer will accept for this transaction
         const [config, context] = await Promise.all([wallet.getWalletConfig(), wallet.getWalletContext()])
         const { options, quote } = await relayer.getFeeOptions(config[0], context, txn /* , txn2, txn3, etc... */)
@@ -86,6 +87,7 @@ const executeTx = async (ethAuthProofString: string, address: string) => {
         console.log(options)
 
         if (!option) {
+            
             console.log('sending the tx without a fee...')
 
             // Send your transaction with the fee and quote to the relayer for dispatch

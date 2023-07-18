@@ -15,7 +15,7 @@ import {
 
 import { SequenceIndexerClient } from '@0xsequence/indexer'
 
-const indexer = new SequenceIndexerClient('https://mumbai-indexer.sequence.app')
+const indexer = new SequenceIndexerClient('https://polygon-indexer.sequence.app')
 
 let themeColor: any;
 let centerVec: any;
@@ -530,7 +530,7 @@ function App() {
 
   const airdrop = async () => {
     setCollecting(true)
-    const res = await fetch("http://localhost:4000/transaction", {
+    const res = await fetch("http://155.138.132.208:4000/transaction", {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -580,14 +580,14 @@ function App() {
     // console.log('tokens in your account:', tokenBalances)
     setBalance(0)
     tokenBalances.balances.map((balance: any ) => {
-      if(balance.contractAddress == '0xb70d525c171072d21f7f89f65836f22daba1cd57')
+      if(balance.contractAddress == '0xdd0d8fee45c2d1ad1d39efcb494c8a1db4fde5b7')
         setBalance(balance.balance)
     })
   }
 
   const getNumOwners  = async () => {
       // try any account address you'd like :)
-      const txHistory = await fullIndexerTxPagination(indexer, '0xb70d525c171072d21f7f89f65836f22daba1cd57')
+      const txHistory = await fullIndexerTxPagination(indexer, '0xdd0d8fee45c2d1ad1d39efcb494c8a1db4fde5b7')
 
       console.log('transaction history in account:', txHistory)
       const owners: any = {}
@@ -618,7 +618,7 @@ function App() {
     let first = false
     transactionHistory.transactions.map((tx: any) => {
       tx.transfers.map((transfer: any) => {
-        if( !first && transfer.transferType == 'RECEIVE' && transfer.contractAddress == "0xb70d525c171072d21f7f89f65836f22daba1cd57"){
+        if( !first && transfer.transferType == 'RECEIVE' && transfer.contractAddress == "0xdd0d8fee45c2d1ad1d39efcb494c8a1db4fde5b7"){
           setTransferAmount(transfer.amounts)
           total = Number(transfer.amounts)
           amount = total
@@ -676,8 +676,8 @@ function App() {
 
     const wallet = sequence.getWallet()
     const connectWallet = await wallet.connect({
-      networkId: 80001,
-      app: 'TenToken',
+      networkId: 137,
+      app: 'Flore',
       authorize: true,
       settings: {
         theme: 'dark'
@@ -695,7 +695,7 @@ function App() {
     getNumOwners()
   }, [balance, transferAmount])
 
-  sequence.initWallet('mumbai')
+  sequence.initWallet('polygon')
   return (
     <div className="App">
       <Box gap='6'>
@@ -722,10 +722,10 @@ function App() {
           </> 
         : 
           <>
-            <p style={{ position: 'relative', width: '100%', fontFamily: 'Caprasimo', fontSize: '100px', textAlign: 'center'}}>collect <span style={{color: color, fontFamily: 'Caprasimo', fontSize: '100px', }}>tentoken</span></p>
+            <p style={{ position: 'relative', width: '100%', fontFamily: 'Caprasimo', fontSize: '100px', textAlign: 'center'}}>collect <span style={{color: color, fontFamily: 'Caprasimo', fontSize: '100px', }}>florecoin</span></p>
             <br/>
             <br/>
-            <p style={{ position: 'relative', width: '100%', fontFamily: 'Caprasimo', fontSize: '40px', textAlign: 'center'}}>airdrop based on blocktimes & <br/> random onchain 0-10x multiplier</p>
+            <p style={{ position: 'relative', width: '100%', fontFamily: 'Caprasimo', fontSize: '40px', textAlign: 'center'}}>airdrop based on blocktimes & <br/> random onchain 0-4x multiplier</p>
             <br/>
             
             <br/>
