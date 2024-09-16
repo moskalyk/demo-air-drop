@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 4000
 const app = express();
 
 const corsOptions = {
-    origin: ['http://localhost:3001'],
+    origin: ['https://demo-air-drop.vercel.app'],
 };
   
 app.use(cors(corsOptions));
@@ -40,7 +40,6 @@ app.post('/transaction', async (req: any, res: any) => {
 })
 
 app.listen(PORT, async () => {
-
     console.log(`listening on port: ${PORT}`)
     console.log(`relaying from this sequence wallet: ${await getAddress()}`)
 })

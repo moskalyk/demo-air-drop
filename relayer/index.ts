@@ -5,27 +5,13 @@ import { RpcRelayer } from '@0xsequence/relayer'
 import { Wallet } from '@0xsequence/wallet'
 import { SequenceIndexerClient } from '@0xsequence/indexer'
 
-import { Repo, AnyDocumentId } from '@automerge/automerge-repo'
-import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel'
-import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket"
-
 import { JSONFilePreset } from 'lowdb/node'
 
 // Read or create db.json
-const defaultData = { posts: [] }
-
-
-const repo = new Repo({
-    network: [
-        new BroadcastChannelNetworkAdapter(),
-        new BrowserWebSocketClientAdapter('wss://sync.automerge.org')
-    ]
-})
+const defaultData = { }
 
 // pnpm i @automerge/automerge-repo @automerge/automerge-repo-network-broadcastchannel @automerge/automerge-repo-network-websocket
 dotenv.config(); // pass the environment variables into the process
-
-const docId = process.env.HANDLE_URL as AnyDocumentId;
 
 const serverPrivateKey = process.env!.pkey!
 
@@ -60,9 +46,7 @@ const auth = async (sequenceWalletAddress: string, ethAuthProofString: string) =
     const walletAddress = sequenceWalletAddress
 
     const api = new sequence.api.SequenceAPIClient('https://api.sequence.app')
-    console.log(chainId)
-    console.log(ethAuthProofString)
-    console.log(walletAddress)
+
     const { isValid }: any = await api.isValidETHAuthProof({
         chainId, walletAddress, ethAuthProofString
     })
@@ -77,20 +61,17 @@ const auth = async (sequenceWalletAddress: string, ethAuthProofString: string) =
 
 const getBlockNumber = async (): Promise<number> => {
 	const blockNumber = await provider.getBlockNumber()
-	console.log(blockNumber)
 	return blockNumber
 }
 
 const wait = (ms: any) => new Promise((res) => setTimeout(res, ms))
 
 const executeTx = async (ethAuthProofString: string, address: string) => {
-    console.log('testing')
     // Initialize the database
-const db: any = await JSONFilePreset('db.json', defaultData);
+    const db: any = await JSONFilePreset('db.json', defaultData);
 
-// Wallet address and new block number to add
-const walletAddress = address;
-
+    // Wallet address and new block number to add
+    const walletAddress = address;
 
 try {
     // Create the Sequence server wallet
@@ -121,17 +102,17 @@ try {
 
     const randomValue = Math.floor(Math.random() * 4);
     const blocks = db.data[walletAddress];
+
     let lastSavedBlock;
+
     if (blocks && blocks.length > 0) {
         lastSavedBlock = blocks[blocks.length - 2]; // Get the last block number
         console.log(`Last block number for ${walletAddress}:`, lastSavedBlock);
     } else {
         console.log(`No blocks found for ${walletAddress}`);
     }
-    console.log('lastBlock')
-    console.log(lastBlock)
+
     const blocksSinceLastMint = lastBlock - lastSavedBlock;
-    console.log("blocksSinceLastMint", blocksSinceLastMint);
 
     const tokensToMint = Math.floor(
         Math.min(
