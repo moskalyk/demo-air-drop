@@ -5,18 +5,38 @@ import { RpcRelayer } from '@0xsequence/relayer'
 import { Wallet } from '@0xsequence/wallet'
 import { SequenceIndexerClient } from '@0xsequence/indexer'
 
+import { Repo, AnyDocumentId } from '@automerge/automerge-repo'
+import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel'
+import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket"
+
+import { JSONFilePreset } from 'lowdb/node'
+
+// Read or create db.json
+const defaultData = { posts: [] }
+
+
+const repo = new Repo({
+    network: [
+        new BroadcastChannelNetworkAdapter(),
+        new BrowserWebSocketClientAdapter('wss://sync.automerge.org')
+    ]
+})
+
+// pnpm i @automerge/automerge-repo @automerge/automerge-repo-network-broadcastchannel @automerge/automerge-repo-network-websocket
 dotenv.config(); // pass the environment variables into the process
+
+const docId = process.env.HANDLE_URL as AnyDocumentId;
 
 const serverPrivateKey = process.env!.pkey!
 
 // Get a provider
-const provider = new ethers.providers.JsonRpcProvider('https://nodes.sequence.app/mumbai')
+const provider = new ethers.providers.JsonRpcProvider('https://nodes.sequence.app/amoy')
 
 // Create your server EOA
 const walletEOA = new ethers.Wallet(serverPrivateKey, provider)
 
 // Create your rpc relayer instance with relayer node you want to use
-const relayer = new RpcRelayer({url: 'https://mumbai-relayer.sequence.app', provider: provider})
+const relayer = new RpcRelayer({url: 'https://amoy-relayer.sequence.app', provider: provider})
 
 const getAddress = async () => {
     const wallet = (await Wallet.singleOwner(walletEOA)).connect(provider, relayer)
@@ -24,7 +44,7 @@ const getAddress = async () => {
 }
 
 const getBalance = async () => {
-    const indexer = new SequenceIndexerClient('https://mumbai-indexer.sequence.app')
+    const indexer = new SequenceIndexerClient('https://amoy-indexer.sequence.app')
 
     // gets the native token balance
     const balance = await indexer.getEtherBalance({
@@ -36,12 +56,14 @@ const getBalance = async () => {
 
 const auth = async (sequenceWalletAddress: string, ethAuthProofString: string) => {
 
-    const chainId = 'mumbai'
+    const chainId = 'amoy'
     const walletAddress = sequenceWalletAddress
 
     const api = new sequence.api.SequenceAPIClient('https://api.sequence.app')
-    
-    const { isValid } = await api.isValidETHAuthProof({
+    console.log(chainId)
+    console.log(ethAuthProofString)
+    console.log(walletAddress)
+    const { isValid }: any = await api.isValidETHAuthProof({
         chainId, walletAddress, ethAuthProofString
     })
 
@@ -53,25 +75,76 @@ const auth = async (sequenceWalletAddress: string, ethAuthProofString: string) =
 
 }
 
+const getBlockNumber = async (): Promise<number> => {
+	const blockNumber = await provider.getBlockNumber()
+	console.log(blockNumber)
+	return blockNumber
+}
+
+const wait = (ms: any) => new Promise((res) => setTimeout(res, ms))
+
 const executeTx = async (ethAuthProofString: string, address: string) => {
+    console.log('testing')
+    // Initialize the database
+const db: any = await JSONFilePreset('db.json', defaultData);
+
+// Wallet address and new block number to add
+const walletAddress = address;
+
+
+try {
+    // Create the Sequence server wallet
+    const wallet = (await Wallet.singleOwner(walletEOA)).connect(provider, relayer);
+
+    const erc20TokenAddress = '0xdd90126856957aa1e9c5cc3395e866b6eb830a44';
+    const erc20Interface = new ethers.utils.Interface([
+        'function mint(address to, uint256 amount) returns ()'
+    ]);
+
+    const blocksPerToken = 50;
+    const lastBlock = await getBlockNumber();
+    const newBlockNumber = lastBlock;
+
+    // Read the current data
+    await db.read();
     
-    try{
-
-        // Create your Sequence server wallet, controlled by your server EOA, and connect it to the relayer
-        const wallet = (await Wallet.singleOwner(walletEOA)).connect(provider, relayer)
-
-        const erc20TokenAddress = '0xdd0d8fee45c2d1ad1d39efcb494c8a1db4fde5b7'
-
-        // Craft your transaction
-        const erc20Interface = new ethers.utils.Interface([
-            'function collect(address recipient_) external'
-        ])
+    // Check if the wallet address exists, if not, initialize it
+    if (!db.data[walletAddress]) {
+        db.data[walletAddress] = [];  // Initialize with an empty array
+    }
     
+    // Add the new block number to the wallet's block list
+    db.data[walletAddress].push(newBlockNumber);
+    
+    // Write the updated data to db.json
+    await db.write();
 
-        const data = erc20Interface.encodeFunctionData(
-            'collect', [address]
+    const randomValue = Math.floor(Math.random() * 4);
+    const blocks = db.data[walletAddress];
+    let lastSavedBlock;
+    if (blocks && blocks.length > 0) {
+        lastSavedBlock = blocks[blocks.length - 2]; // Get the last block number
+        console.log(`Last block number for ${walletAddress}:`, lastSavedBlock);
+    } else {
+        console.log(`No blocks found for ${walletAddress}`);
+    }
+    console.log('lastBlock')
+    console.log(lastBlock)
+    const blocksSinceLastMint = lastBlock - lastSavedBlock;
+    console.log("blocksSinceLastMint", blocksSinceLastMint);
+
+    const tokensToMint = Math.floor(
+        Math.min(
+            blocksSinceLastMint / blocksPerToken + (blocksSinceLastMint / blocksPerToken) * randomValue, 
+            1000
         )
-    
+    );
+
+    console.log("tokensToMint", tokensToMint);
+
+    const data = erc20Interface.encodeFunctionData('mint', [address, tokensToMint]);
+
+    // Send the transaction here using the wallet, e.g. wallet.sendTransaction(...)
         const txn = {
             to: erc20TokenAddress,
             data
@@ -104,6 +177,7 @@ const executeTx = async (ethAuthProofString: string, address: string) => {
             }
 
             return { transactionHash: txnReceipt.transactionHash }
+            // return { transactionHash: 'txnReceipt.transactionHash' }
         } else { // to be used for mainnet / polygon
             console.log('sending the tx with a fee...')
 

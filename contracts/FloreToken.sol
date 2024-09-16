@@ -2,7 +2,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract TenToken is ERC20, Ownable {
+contract FloreToken is ERC20, Ownable {
 
     uint256 private blocksPerMint = 50;
     uint256 public randomSeedCounter;
@@ -11,7 +11,7 @@ contract TenToken is ERC20, Ownable {
     uint256 private constant MAX_RANDOM_VALUE = 10;
     mapping(address => uint256) public lastMintBlock;
 
-    constructor() ERC20("TenToken", "TEN") {
+    constructor() ERC20("FloreToken", "_") {
         genesisBlock = block.number;
         maxTokens = 1000;
     }

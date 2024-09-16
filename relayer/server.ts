@@ -1,21 +1,20 @@
 import express from 'express'
-import bodyParser from 'body-parser'
 import cors from 'cors'
-import { auth, executeTx, getAddress, getBalance } from '.';
+import { auth, executeTx, getAddress } from './index.js';
 
 const PORT = process.env.PORT || 4000
 const app = express();
 
 const corsOptions = {
-    origin: ['http://localhost:3000'],
+    origin: ['http://localhost:3001'],
 };
   
 app.use(cors(corsOptions));
-app.use(bodyParser.json())
+app.use(express.json())
 
-const ethAuthProofmiddleware = async (req, res, next) => {
+const ethAuthProofmiddleware = async (req: any, res: any, next: any) => {
     try{
-        if(await auth(req.body.wallet, req.body.ethAuthProofString)){
+        if(await auth(req.body.address, req.body.ethAuthProofString)){
             next()
         } else {
             throw Error('Not Authorized')
@@ -41,11 +40,7 @@ app.post('/transaction', async (req: any, res: any) => {
 })
 
 app.listen(PORT, async () => {
+
     console.log(`listening on port: ${PORT}`)
     console.log(`relaying from this sequence wallet: ${await getAddress()}`)
-    
-    const balance = await getBalance();
-    
-    if(Number(balance) == 0)
-        console.log(`please top up with the native token, your current balance is ${balance}`)
 })

@@ -2,7 +2,7 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import button from './button.png'
-import { sequence } from '0xsequence'
+import {sequence} from '0xsequence'
 import { 
   Box, 
   IconButton, 
@@ -13,9 +13,10 @@ import {
 
 // import Splitting from "https://cdn.skypack.dev/splitting";
 
-import { SequenceIndexerClient } from '@0xsequence/indexer'
+// @ts-ignore
+import { SequenceIndexer } from '@0xsequence/indexer'
 
-const indexer = new SequenceIndexerClient('https://polygon-indexer.sequence.app')
+const indexer = new SequenceIndexer('https://amoy-indexer.sequence.app','AQAAAAAAAABXzw1j_WnZaHmFElFT3f8ZOwA')
 
 let themeColor: any;
 let centerVec: any;
@@ -530,7 +531,7 @@ function App() {
 
   const airdrop = async () => {
     setCollecting(true)
-    const res = await fetch("http://155.138.132.208:4000/transaction", {
+    const res = await fetch("http://0.0.0.0:4000/transaction", {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -545,11 +546,15 @@ function App() {
 
   const bootstrap = async () => {
       await airdrop()
-      const amount = await getLastTx()
-      init()
-      setTimeout(() => {
-        setEarned(true)
-      }, amount*10)
+      setTimeout(async () => {
+
+        const amount = await getLastTx()
+        init()
+        setTimeout(() => {
+          setEarned(true)
+        }, amount*10)
+      }, 1500)
+
       setInitialized(true)
   }
   React.useEffect(() => {
@@ -580,14 +585,14 @@ function App() {
     // console.log('tokens in your account:', tokenBalances)
     setBalance(0)
     tokenBalances.balances.map((balance: any ) => {
-      if(balance.contractAddress == '0xdd0d8fee45c2d1ad1d39efcb494c8a1db4fde5b7')
+      if(balance.contractAddress == '0xdd90126856957aa1e9c5cc3395e866b6eb830a44')
         setBalance(balance.balance)
     })
   }
 
   const getNumOwners  = async () => {
       // try any account address you'd like :)
-      const txHistory = await fullIndexerTxPagination(indexer, '0xdd0d8fee45c2d1ad1d39efcb494c8a1db4fde5b7')
+      const txHistory = await fullIndexerTxPagination(indexer, '0xdd90126856957aa1e9c5cc3395e866b6eb830a44')
 
       console.log('transaction history in account:', txHistory)
       const owners: any = {}
@@ -618,7 +623,7 @@ function App() {
     let first = false
     transactionHistory.transactions.map((tx: any) => {
       tx.transfers.map((transfer: any) => {
-        if( !first && transfer.transferType == 'RECEIVE' && transfer.contractAddress == "0xdd0d8fee45c2d1ad1d39efcb494c8a1db4fde5b7"){
+        if( !first && transfer.transferType == 'RECEIVE' && transfer.contractAddress == "0xdd90126856957aa1e9c5cc3395e866b6eb830a44"){
           setTransferAmount(transfer.amounts)
           total = Number(transfer.amounts)
           amount = total
@@ -676,8 +681,7 @@ function App() {
 
     const wallet = sequence.getWallet()
     const connectWallet = await wallet.connect({
-      networkId: 137,
-      app: 'Flore',
+      app: 'oracle token',
       authorize: true,
       settings: {
         theme: 'dark'
@@ -695,7 +699,7 @@ function App() {
     getNumOwners()
   }, [balance, transferAmount])
 
-  sequence.initWallet('polygon')
+  sequence.initWallet('AQAAAAAAAABXzw1j_WnZaHmFElFT3f8ZOwA',{defaultNetwork: 'amoy'})
   return (
     <div className="App">
       <Box gap='6'>
@@ -722,7 +726,7 @@ function App() {
           </> 
         : 
           <>
-            <p style={{ position: 'relative', width: '100%', fontFamily: 'Caprasimo', fontSize: '100px', textAlign: 'center'}}>collect <span style={{color: color, fontFamily: 'Caprasimo', fontSize: '100px', }}>florecoin</span></p>
+            <p style={{ position: 'relative', width: '100%', fontFamily: 'Caprasimo', fontSize: '100px', textAlign: 'center'}}>collect <span style={{color: color, fontFamily: 'Caprasimo', fontSize: '100px', }}>oracle token</span></p>
             <br/>
             <br/>
             <p style={{ position: 'relative', width: '100%', fontFamily: 'Caprasimo', fontSize: '40px', textAlign: 'center'}}>airdrop based on blocktimes & <br/> random onchain 0-4x multiplier</p>

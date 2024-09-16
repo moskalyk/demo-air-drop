@@ -11,7 +11,7 @@ body{
   background: black;
   background-repeat: no-repeat;
   background-size: cover;
-  overflow:hidden;
+  /* overflow:hidden; */
   font-family: Arial;
 }
 .hexagon {
